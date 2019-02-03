@@ -59,7 +59,7 @@ def parse_args
 end
 
 # @param [String] name
-# @param [String] workspace_dir
+# @param [Pathname] workspace_dir
 # @param [String] org
 # @return [Xcodeproj::Project]
 def new_project(name, workspace_dir, org)
@@ -67,9 +67,11 @@ def new_project(name, workspace_dir, org)
   project = Xcodeproj::Project.new(path, false, Xcodeproj::Constants::LAST_KNOWN_OBJECT_VERSION)
 
   target = new_target(project, name, org)
-  new_test_target(project, target, org)
+  test_target = new_test_target(project, target, org)
 
   project.frameworks_group.remove_from_project
+
+  add_project_to_pod_if_exist(workspace_dir + 'Podfile', name, target.display_name, test_target.display_name)
 
   project
 end
@@ -194,6 +196,31 @@ def new_header(name, path)
   end
 end
 
+
+# @param [Pathname] podfile
+# @param [String] project
+# @param [String] target
+# @param [String] test_target
+def add_project_to_pod_if_exist(podfile, project, target, test_target)
+  unless File.exist?(podfile)
+    return
+  end
+
+  File.open(podfile, 'a') do |f|
+    f.write <<"EOS"
+
+target #{target} do
+  project #{project}
+  use_frameworks!
+
+  target #{test_target} do
+    inherit! :search_paths
+  end
+end
+EOS
+  end
+end
+
 # @param [Xcodeproj::Project] project
 # @param [TargetType] type
 # @param [String] name
@@ -204,7 +231,7 @@ end
 
 p = parse_args
 workspace_path = p[:workspace]
-workspace_dir = File.dirname workspace_path
+workspace_dir = Pathname(File.dirname workspace_path)
 
 workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path)
 project = new_project(p[:name], workspace_dir, p[:org])

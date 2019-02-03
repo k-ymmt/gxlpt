@@ -1,0 +1,18 @@
+workspace 'Example'
+target Foo do
+  project Foo
+  use_frameworks!
+
+  target FooTest do
+    inherit! :search_paths
+  end
+end
+
+target Foo do
+  project Foo
+  use_frameworks!
+
+  target FooTest do
+    inherit! :search_paths
+  end
+end

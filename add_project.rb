@@ -209,11 +209,11 @@ def add_project_to_pod_if_exist(podfile, project, target, test_target)
   File.open(podfile, 'a') do |f|
     f.write <<"EOS"
 
-target #{target} do
-  project #{project}
+target '#{target}' do
+  project '#{project}'
   use_frameworks!
 
-  target #{test_target} do
+  target '#{test_target}' do
     inherit! :search_paths
   end
 end
